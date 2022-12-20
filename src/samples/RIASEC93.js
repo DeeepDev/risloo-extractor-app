@@ -86,8 +86,6 @@ class RIASEC93 extends Profile {
     // Deconstructing the Spec of the Profile
     const { items: itemsSpec } = spec;
 
-    // console.log(dataset.questions.splice(11));
-
     dataset.score.sort((item1, item2) => item2.mark - item1.mark);
 
     // Gathering required info for page 1 items
@@ -138,8 +136,6 @@ class RIASEC93 extends Profile {
         marks: dataset.questions.slice(222, 222 + 6).map((q) => +q.user_answered),
       },
     ];
-
-    console.log(questionItems);
 
     return [{ items, questionItems }];
   }
