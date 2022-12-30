@@ -1,6 +1,7 @@
 const { Profile, Mappings } = require("../Profile");
 const GMIT93 = require("./GMIT93");
 const RIASEC93 = require("./RIASEC93");
+const _16PF = require("./16PF93");
 
 class CAATS93 extends Profile {
   // Number of pages
@@ -85,6 +86,19 @@ class CAATS93 extends Profile {
         y: 0,
       },
     },
+    ravenItem: {
+      stops: [0, 65, 77, 89, 113, 125, 149],
+      interprets: [
+        { level: 0, title: "عقب‌مانده" },
+        { level: 1, title: "عقب‌مانده\nمرزی" },
+        { level: 2, title: "کودن" },
+        { level: 3, title: "متوسط" },
+        { level: 4, title: "ممتاز" },
+        { level: 5, title: "بسیار ممتاز" },
+        { level: 6, title: "حدود نابغه" },
+      ],
+      widthCoeff: 2.5,
+    },
     /* "labels" part which has to be provided for each profile */
     labels: Object.values(this.labels),
   };
@@ -100,7 +114,7 @@ class CAATS93 extends Profile {
       dataset,
     } = this;
 
-    console.log(dataset.score.slice(0, 9));
+    const { ravenItem: ravenItemSpec } = spec;
 
     const [GMIT_Context] = new GMIT93(
       { score: Object.fromEntries(dataset.score.slice(11, 19).map((s) => [s.label.eng, s.mark])) },
@@ -117,16 +131,7 @@ class CAATS93 extends Profile {
           widthCoeff: 7,
           label: { offsetX: 5 },
         },
-        labels: [
-          { eng: "gmit_linguistic", fr: "زبانی - کلامی" },
-          { eng: "gmit_logical_mathematical", fr: "منطقی - ریاضی" },
-          { eng: "gmit_visual_spatial", fr: "دیداری - فضایی" },
-          { eng: "gmit_bodily_kinesthetic", fr: "بدنی - جنبشی" },
-          { eng: "gmit_interpersonal", fr: "میان‌فردی" },
-          { eng: "gmit_intrapersonal", fr: "درون‌فردی" },
-          { eng: "gmit_musical", fr: "موسیقیایی" },
-          { eng: "gmit_naturalist", fr: "طبیعت‌گرا" },
-        ],
+        labelsPrefix: "gmit",
       }
     ).getTemplateEngineParams();
 
@@ -149,14 +154,7 @@ class CAATS93 extends Profile {
             widthCoeff: 3.5,
           },
         },
-        labels: [
-          { eng: "riasec_realistic", fr: "واقع‌گرا (و)" },
-          { eng: "riasec_investigative", fr: "جستجوگر (ج)" },
-          { eng: "riasec_artistic", fr: "هنری (ه)" },
-          { eng: "riasec_social", fr: "اجتماعی (الف)" },
-          { eng: "riasec_enterprising", fr: "متهور (م)" },
-          { eng: "riasec_conventional", fr: "قراردادی (ق)" },
-        ],
+        labelsPrefix: "riasec",
       }
     ).getTemplateEngineParams();
 
@@ -170,9 +168,50 @@ class CAATS93 extends Profile {
       report: dataset.score[8].mark,
     };
 
-    console.log(MBTI_Context)
+    const RAVEN_Context = {
+      item: {
+        mark: dataset.score[9].mark,
+        width:
+          dataset.score[9].mark >= ravenItemSpec.stops[1]
+            ? 45 + (dataset.score[9].mark - ravenItemSpec.stops[1]) * ravenItemSpec.widthCoeff
+            : dataset.score[9].mark * 0.69,
+        level: dataset.score[10].mark,
+        stops: ravenItemSpec.stops.map((stop) => ({
+          mark: stop,
+          width:
+            stop >= ravenItemSpec.stops[1]
+              ? 45 + (stop - ravenItemSpec.stops[1]) * ravenItemSpec.widthCoeff
+              : stop * 0.69,
+        })),
+      },
+    };
 
-    return [{ GMIT_Context, RIASEC_Context, MBTI_Context }];
+    const [_16PF_Context] = new _16PF(
+      {
+        score: Object.fromEntries(dataset.score.slice(25).map((s) => [s.label.eng, s.mark])),
+        fields: dataset.info.fields,
+      },
+      {},
+      {
+        items: {
+          offsetY: 19,
+          widthCoeff: 9,
+          label: {
+            offsetX: 9,
+          },
+        },
+        gaugeItems: {
+          offsetX: 46,
+          circle: {
+            R: 16.5,
+            r: 12,
+          },
+        },
+        labelsPrefix: "16pf",
+      }
+    ).getTemplateEngineParams();
+
+    return [{ GMIT_Context, RIASEC_Context, MBTI_Context, _16PF_Context, RAVEN_Context }];
   }
 }
 
